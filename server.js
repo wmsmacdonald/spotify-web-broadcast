@@ -1,14 +1,11 @@
-var lame = require('lame');
-var Speaker = require('speaker');
 var Spotify = require('spotify-web');
 var express = require('express');
-var path = require('path');
 var WebSocketServer = require('ws').Server;
-var wss = new WebSocketServer({ port: 8080 });
+var wss = new WebSocketServer({ port: 5340 });
 
 var username = process.env.USERNAME;
 var password = process.env.PASSWORD;
-var playlist = process.argv[2];
+var playlistUri = process.argv[2] || 'spotify:user:spotify:playlist:5O2ERf8kAYARVVdfCKZ9G7';
 
 var app = express();
 app.use(express.static(__dirname + '/public'));
@@ -17,11 +14,8 @@ app.get('/playlist', function(req, res) {
   Spotify.login(username, password, function (err, spotify) {
     if (err) throw err;
 
-    uri = 'spotify:user:bearded_gecko:playlist:5g9jTHXGH74EpnflhaoSsF';
-    spotify.playlist(uri, function (err, playlist) {
+    spotify.playlist(playlistUri, function (err, playlist) {
       if (err) throw err;
-
-      //console.log(playlist);
 
       var trackUris = playlist.contents.items;
       var tracks = [];
@@ -73,7 +67,7 @@ app.get('/track', function(req, res) {
   });
 });
 
-app.listen(3000);
+app.listen(4000);
 
 var id = 0;
 var clients = {};
@@ -82,7 +76,7 @@ wss.on('connection', function connection(ws) {
   ws.id = id++;
   clients[ws.id] = ws;
 
-  console.log('ws client connected');
+  console.log('ws client ' + ws.id + ' connected');
   ws.on('message', function(trackUri) {
     var clientIds = Object.keys(clients);
 

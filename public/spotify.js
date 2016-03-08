@@ -6,7 +6,6 @@ $(function() {
 });
 
 function receivedTracks(tracks) {
-  console.log(tracks);
   var tracksDiv = $('#tracks');
   for (var i = 0; i < tracks.length; i++) {
     var element = '<button data-trackUri="'+ tracks[i].uri + '" class="trackButton">' +
@@ -20,7 +19,7 @@ function receivedTracks(tracks) {
   });
 }
 
-var ws = new WebSocket('ws://localhost:8080');
+var ws = new WebSocket('ws://localhost:5340');
 
 ws.onopen = function() {
   ws.onmessage = function(message) {
@@ -30,6 +29,5 @@ ws.onopen = function() {
 
 
 function changeTrack(trackUri) {
-  console.log(trackUri);
   $('#audio').attr('src', '/track?uri=' + trackUri);
 }
