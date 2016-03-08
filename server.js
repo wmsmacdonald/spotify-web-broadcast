@@ -62,7 +62,6 @@ app.get('/track', function(req, res) {
           .on('finish', function () {
             spotify.disconnect();
           });
-
     });
   });
 });
