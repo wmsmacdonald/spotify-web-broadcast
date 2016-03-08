@@ -3,18 +3,15 @@ var Speaker = require('speaker');
 var Spotify = require('spotify-web');
 var express = require('express');
 var path = require('path');
-//var uri = process.argv[2] || 'spotify:track:6tdp8sdXrXlPV6AZZN2PE8';
- 
-// Spotify credentials... 
+var WebSocketServer = require('ws').Server;
+var wss = new WebSocketServer({ port: 8080 });
+
 var username = process.env.USERNAME;
 var password = process.env.PASSWORD;
+var playlist = process.argv[2];
 
 var app = express();
 app.use(express.static(__dirname + '/public'));
-
-app.get('/', function(req, res) {
-
-});
 
 app.get('/playlist', function(req, res) {
   Spotify.login(username, password, function (err, spotify) {
@@ -47,7 +44,6 @@ app.get('/playlist', function(req, res) {
           tracks.push(slimTrack);
 
           if (tracks.length === trackUris.length) {
-            //console.log(tracks);
             res.send(tracks);
           }
         });
@@ -56,9 +52,10 @@ app.get('/playlist', function(req, res) {
   });
 });
 
-app.get('/song', function(req, res) {
+app.get('/track', function(req, res) {
+  res.set({ 'Content-Type': 'audio/mpeg3'});
   var uri = req.query.uri;
-  res.set({'Content-Type': 'audio/mp3'});
+
   Spotify.login(username, password, function (err, spotify) {
     if (err) throw err;
 
@@ -66,15 +63,35 @@ app.get('/song', function(req, res) {
       if (err) throw err;
       console.log('Playing: %s - %s', track.artist[0].name, track.name);
 
-      // play() returns a readable stream of MP3 audio data
-      track.play()
-        .pipe(res)
-        .on('finish', function () {
-          spotify.disconnect();
-        });
+        track.play()
+          .pipe(res)
+          .on('finish', function () {
+            spotify.disconnect();
+          });
 
     });
   });
 });
 
 app.listen(3000);
+
+var id = 0;
+var clients = {};
+
+wss.on('connection', function connection(ws) {
+  ws.id = id++;
+  clients[ws.id] = ws;
+
+  console.log('ws client connected');
+  ws.on('message', function(trackUri) {
+    var clientIds = Object.keys(clients);
+
+    for (var i = 0; i < clientIds.length; i++) {
+      clients[clientIds[i]].send(trackUri);
+    }
+  });
+
+  ws.on('close', function() {
+    delete clients[ws.id];
+  });
+});

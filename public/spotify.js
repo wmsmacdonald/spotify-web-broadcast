@@ -3,25 +3,33 @@ $(function() {
     url: '/playlist',
     success: receivedTracks
   });
-
-
 });
 
 function receivedTracks(tracks) {
   console.log(tracks);
-  var tracksTable = $('#tracksTable');
+  var tracksDiv = $('#tracks');
   for (var i = 0; i < tracks.length; i++) {
-    var element = '<tr data-trackUri="'+ tracks[i].uri + '" class="trackRow">' +
-      '<td>' + tracks[i].name + '</td>' +
-      '<td>' + tracks[i].artists.join(', ') + '</td>' +
-      '</tr>';
-    tracksTable.append(element);
+    var element = '<button data-trackUri="'+ tracks[i].uri + '" class="trackButton">' +
+      tracks[i].name + '</button><br/>';
+    tracksDiv.append(element);
   }
 
-  $('.trackRow').click(function() {
+  $('.trackButton').click(function() {
     var trackUri = $(this).attr('data-trackUri');
-    console.log(trackUri);
-    $('#audio').attr('src', '/song?uri=' + trackUri);
+    ws.send(trackUri);
   });
 }
 
+var ws = new WebSocket('ws://localhost:8080');
+
+ws.onopen = function() {
+  ws.onmessage = function(message) {
+    changeTrack(message.data);
+  };
+};
+
+
+function changeTrack(trackUri) {
+  console.log(trackUri);
+  $('#audio').attr('src', '/track?uri=' + trackUri);
+}
