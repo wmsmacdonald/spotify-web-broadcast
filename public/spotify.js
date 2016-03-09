@@ -30,4 +30,12 @@ ws.onopen = function() {
 
 function changeTrack(trackUri) {
   $('#audio').attr('src', '/track?uri=' + trackUri);
+  var audio = document.getElementById('audio');
+  $('#playPauseButton').click(function() {
+    if (audio.paused == false) {
+      audio.pause();
+    } else {
+      audio.play();
+    }
+  });
 }
