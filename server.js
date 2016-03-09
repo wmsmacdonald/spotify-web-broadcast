@@ -1,7 +1,10 @@
 var Spotify = require('spotify-web');
 var express = require('express');
 var WebSocketServer = require('ws').Server;
-var wss = new WebSocketServer({ port: 5340 });
+var port = 4000;
+var wsPort = 5340;
+var wss = new WebSocketServer({ port: wsPort },
+  function() { console.log('WebSockets listening on %d', wsPort)});
 
 var username = process.env.USERNAME;
 var password = process.env.PASSWORD;
@@ -66,7 +69,7 @@ app.get('/track', function(req, res) {
   });
 });
 
-app.listen(4000);
+app.listen(port, function() { console.log('Listening on port %d', port) });
 
 var id = 0;
 var clients = {};
@@ -85,6 +88,7 @@ wss.on('connection', function connection(ws) {
   });
 
   ws.on('close', function() {
+    console.log('ws client %d disconnected', ws.id);
     delete clients[ws.id];
   });
 });
